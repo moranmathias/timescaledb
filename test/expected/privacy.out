@@ -2,10 +2,11 @@
 CREATE OR REPLACE FUNCTION _timescaledb_internal.test_privacy() RETURNS VOID
     AS :MODULE_PATHNAME, 'test_privacy' LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 \c single :ROLE_DEFAULT_PERM_USER
+-- Should be off be default in tests
 SHOW timescaledb.telemetry_level;
  timescaledb.telemetry_level 
 -----------------------------
- basic
+ off
 (1 row)
 
 SET timescaledb.telemetry_level=off;
@@ -28,39 +29,16 @@ SELECT COUNT(*) from _timescaledb_catalog.installation_metadata;
      2
 (1 row)
 
--- Now try to send something
-RESET timescaledb.telemetry_level;
--- We don't care about the output of the version checker
-SET client_min_messages=error;
+-- Do it again to make sure
 SELECT _timescaledb_internal.test_privacy();
  test_privacy 
 --------------
  
 (1 row)
 
-RESET client_min_messages;
--- We know it attempted to send if there generated UUIDs
-SELECT COUNT(*) from _timescaledb_catalog.installation_metadata where key='uuid';
- count 
--------
-     1
-(1 row)
-
-SELECT COUNT(*) from _timescaledb_catalog.installation_metadata where key='exported_uuid';
- count 
--------
-     1
-(1 row)
-
-SELECT COUNT(*) from _timescaledb_catalog.installation_metadata where key='install_timestamp';
- count 
--------
-     1
-(1 row)
-
 SELECT COUNT(*) from _timescaledb_catalog.installation_metadata;
  count 
 -------
-     3
+     2
 (1 row)
 
